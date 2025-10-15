@@ -3,14 +3,11 @@ package nika.ml.network;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nika.ml.mnist.EvaluationResults;
-import nika.ml.mnist.Sample;
-
 import java.io.*;
 import java.util.Random;
-
 import static java.lang.Math.*;
-import static nika.ml.mnist.Sample.*;
+import static nika.ml.network.Sample.getSamples;
+import static nika.ml.network.Sample.shuffle;
 
 public class NeuralNetwork {
 
@@ -30,9 +27,8 @@ public class NeuralNetwork {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    boolean visualMode;
     @JsonIgnore
-    EvaluationResults results;
+    EvalResults results;
 
     public NeuralNetwork() {
 
@@ -61,13 +57,16 @@ public class NeuralNetwork {
         z = new double[LAYERS][];
         a = new double[LAYERS][];
         input = new double[INPUT_DIM];
-        visualMode = false;
-        results = new EvaluationResults(10);
+        results = new EvalResults();
 
         for (int l = 0; l < LAYERS; ++l) {
             z[l] = new double[sizes[l + 1]];
             a[l] = new double[sizes[l + 1]];
         }
+    }
+
+    public void setInput(double[] newInput) {
+        System.arraycopy(newInput, 0, input, 0, input.length);
     }
 
     void HeNormal() {
@@ -86,19 +85,7 @@ public class NeuralNetwork {
         }
     }
 
-    public void setVisualSize(int visualSize) {
-        results.setVisualSize(visualSize);
-    }
-
-    public void enableVisualMode() {
-        visualMode = true;
-    }
-
-    public void disableVisualMode() {
-        visualMode = false;
-    }
-
-    public EvaluationResults getResults() {
+    public EvalResults getResults() {
         return results;
     }
 
@@ -108,7 +95,7 @@ public class NeuralNetwork {
 
     public void save() throws IOException {
 
-        StringBuilder filename = new StringBuilder("NN");
+        StringBuilder filename = new StringBuilder("models/NN");
         for (int layer : sizes) {
             filename.append("-").append(layer);
         }
@@ -143,7 +130,7 @@ public class NeuralNetwork {
         }
     }
 
-    // applying weights and biases
+    // apply weights and biases
     private void computeLayer(int layer) {
         if (layer > 0) {
             computeLayer(layer, a[layer - 1]);
@@ -190,15 +177,9 @@ public class NeuralNetwork {
         SoftMax();
     }
 
-    // set the normalized input
-    void normalizeInput(int[] pixels) {
-        for (int i = 0; i < input.length; ++i) {
-            input[i] = pixels[i] * 1.0 / 255;
-        }
-    }
-
-    //
-    double[] classify(double[] prediction) {
+    // output interpretation function
+    // chooses the biggest entry of the normalized output vector and returns its index
+    public double[] interpret(double[] prediction) {
         double max = 0;
         double[] res = new double[2];
         for (int i = 0; i < prediction.length; ++i) {
@@ -211,40 +192,37 @@ public class NeuralNetwork {
         return res;
     }
 
-    public double test(Sample[] samples) {
+    public EvalResults test(Sample[] samples) {
 
         shuffle(samples);
 
         int count = 0;
-        double rightConfidence = 0;
+        double correctConfidence = 0;
         double wrongConfidence = 0;
 
         for (Sample sample : samples) {
-            normalizeInput(sample.getImage());
+            setInput(sample.getInput());
             feedForward();
-            double[] res = classify(a[LAYERS - 1]);
+            double[] res = interpret(a[LAYERS - 1]);
             if (res[0] == sample.getLabel()) {
                 count++;
-                rightConfidence += res[1];
+                correctConfidence += res[1];
             } else {
                 wrongConfidence += res[1];
             }
-            if (visualMode) {
-                results.addSample(res[0] == sample.getLabel(), sample.getImage(), res[0], res[1]);
-            }
+            results.addResult(res[0] == sample.getLabel(), new Result(sample, (int) round(res[0]), res[1]));
         }
 
-        System.out.printf("Average confidence: %.2f %% \n" , (wrongConfidence + rightConfidence) / samples.length);
-        System.out.printf("Average correct confidence: %.2f %% \n" , rightConfidence / count);
-        System.out.printf("Average wrong confidence: %.2f %% \n" , wrongConfidence / (samples.length - count));
+        results.setAccuracy(count * 1.0 / samples.length);
+        results.setConfidence((wrongConfidence + correctConfidence) / samples.length);
+        results.setCorrectConfidence(correctConfidence / count);
+        results.setWrongConfidence(wrongConfidence / (samples.length - count));
 
-        return count * 100.0 / samples.length;
-
+        return results;
     }
 
-    public double test(int[][] images, int[] labels) {
-
-        return test(getSamples(images, labels));
+    public EvalResults test(double[][] inputs, int[] label) {
+        return test(getSamples(inputs, label));
     }
 
 }
