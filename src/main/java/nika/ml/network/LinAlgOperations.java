@@ -1,5 +1,7 @@
 package nika.ml.network;
 
+import java.util.Arrays;
+
 public final class LinAlgOperations {
 
     static void dot(double[][] A, double[] b, double[] res) {
@@ -51,51 +53,33 @@ public final class LinAlgOperations {
         }
     }
 
-    static double[] column(double[][] A, int n) {
-        double[] res = new double[A.length];
-        for (int i = 0; i < A.length; ++i) {
-            res[i] = A[i][n];
-        }
-        return res;
-    }
-
-    static void setColumn(double[][] M, double[] v, int n) {
-        for (int i = 0; i < M.length; ++i) {
-            M[i][n] = v[i];
+    // reset a matrix
+    static void reset(double[][] a) {
+        for (double[] doubles : a) {
+            Arrays.fill(doubles, 0);
         }
     }
 
-
-    static double[] add(double[] a, double[] b) {
-
-        assert a.length == b.length;
-
-        double[] res = new double[a.length];
-        for (int i = 0; i < res.length; ++i) {
-            res[i] = a[i] + b[i];
+    // reset a 3-dimensional array
+    static void reset(double[][][] a) {
+        for (double[][] doubles : a) {
+            reset(doubles);
         }
-        return res;
     }
 
-    static double[][] trans(double [][]A) {
-        double[][] res = new double[A[0].length][A.length];
-        for (int i = 0; i < res.length; ++i) {
-            for (int j = 0; j < res[i].length; ++j) {
-                res[i][j] = A[j][i];
+    // divide each entry by n
+    static void average(double[][][] a, int n) {
+        for (double[][] doubles : a) {
+            average(doubles, n);
+        }
+    }
+
+    // divide each entry by n
+    static void average(double[][] a, int n) {
+        for (int i = 0; i < a.length; ++i) {
+            for (int j = 0; j < a[i].length; ++j) {
+                a[i][j] /= n;
             }
         }
-        return res;
     }
-
-    //    static double[][] dot(double[][] A, double[][] B) {
-//
-//        assert A[0].length == B.length;
-//
-//        double[][] res = new double[A.length][B[0].length];
-//        for (int i = 0; i < B[0].length; ++i) {
-//            setColumn(res, dot(A, column(B, i)), i);
-//        }
-//        return res;
-//    }
-
 }

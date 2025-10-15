@@ -1,30 +1,30 @@
-package nika.ml.mnist;
+package nika.ml.network;
 
 import java.util.Random;
 
 public class Sample {
 
-    int[] image;
-    int label;
+    private final double[] input;
+    private final int label;
 
-    Sample(int[] image, int label) {
-        this.image = image;
+    public Sample(double[] input, int label) {
+        this.input = input;
         this.label = label;
+    }
+
+    public double[] getInput() {
+        return input;
     }
 
     public int getLabel() {
         return label;
     }
 
-    public int[] getImage() {
-        return image;
-    }
-
-    // get Samples array from given images and labels
-    public static Sample[] getSamples(int[][] images, int[] labels) {
-        Sample[] res = new Sample[images.length];
+    // get Samples array from given inputs and labels
+    public static Sample[] getSamples(double[][] inputs, int[] labels) {
+        Sample[] res = new Sample[inputs.length];
         for (int i = 0; i < res.length; ++i) {
-            res[i] = new Sample(images[i], labels[i]);
+            res[i] = new Sample(inputs[i], labels[i]);
         }
         return res;
     }
