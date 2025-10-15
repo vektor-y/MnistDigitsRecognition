@@ -7,17 +7,17 @@ import java.io.IOException;
 
 public class MnistImageReader {
 
-    public static int[][] readImages(String imageFilePath) throws IOException {
+    public static int[][] readImages(String imagesFilePath) throws IOException {
         try (DataInputStream dis = new DataInputStream(
                 new BufferedInputStream(
-                        MnistImageReader.class.getResourceAsStream(imageFilePath)))) {
+                        new FileInputStream(imagesFilePath)))) {
 
             int magicNumber = dis.readInt();
             int numberOfImages = dis.readInt();
             int numRows = dis.readInt();
             int numCols = dis.readInt();
 
-//            System.out.println("Magic Number: " + magicNumber);
+            System.out.println("Magic Number: " + magicNumber);
             System.out.println("Number of Images: " + numberOfImages);
             System.out.println("Image Dimensions: " + numRows + "x" + numCols);
 
@@ -31,15 +31,15 @@ public class MnistImageReader {
         }
     }
 
-    public static int[] readLabels(String imageFilePath) throws IOException {
+    public static int[] readLabels(String labelsFilePath) throws IOException {
         try (DataInputStream dis = new DataInputStream(
                 new BufferedInputStream(
-                        MnistImageReader.class.getResourceAsStream(imageFilePath)))) {
+                        new FileInputStream(labelsFilePath)))) {
 
             int magicNumber = dis.readInt();
             int numberOfLabels = dis.readInt();
 
-//            System.out.println("Magic Number: " + magicNumber);
+            System.out.println("Magic Number: " + magicNumber);
             System.out.println("Number of Labels: " + numberOfLabels);
 
             int[] labels = new int[numberOfLabels];
