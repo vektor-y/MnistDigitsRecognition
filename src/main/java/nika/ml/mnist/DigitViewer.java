@@ -1,13 +1,16 @@
 package nika.ml.mnist;
 
+import nika.ml.network.EvalResults;
 import nika.ml.network.NeuralNetwork;
+import static nika.ml.mnist.MnistTraining.normalizeInput;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import static java.lang.Math.min;
 
 public class DigitViewer {
-    public static void showDigits(EvaluationResults results) {
+    public static void showDigits(EvalResults results, int size) {
         JPanel container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
 
@@ -15,7 +18,7 @@ public class DigitViewer {
         container.add(new JLabel("✅ Correct Predictions"));
         JPanel correctRow = new JPanel();
         correctRow.setLayout(new BoxLayout(correctRow, BoxLayout.X_AXIS));
-        for (int i = 0; i < results.getCorrect().size(); i++) {
+        for (int i = 0; i < min(size, results.getCorrect().size()); i++) {
             correctRow.add(new DigitPanel(results.getCorrect().get(i)));
         }
         container.add(correctRow);
@@ -24,7 +27,7 @@ public class DigitViewer {
         container.add(new JLabel("❌ Incorrect Predictions"));
         JPanel wrongRow = new JPanel();
         wrongRow.setLayout(new BoxLayout(wrongRow, BoxLayout.X_AXIS));
-        for (int i = 0; i < results.getWrong().size(); i++) {
+        for (int i = 0; i < min(size, results.getWrong().size()); i++) {
             wrongRow.add(new DigitPanel(results.getWrong().get(i)));
         }
         container.add(wrongRow);
@@ -39,22 +42,21 @@ public class DigitViewer {
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void showDigits(EvalResults results) {
+        showDigits(results, 10);
+    }
 
-//        NeuralNetwork net = new NeuralNetwork(784, 16, 10);
-//        NNTraining training = new NNTraining(net);
+    public static void main(String[] args) {
         try {
             int[][] images;
             int[] labels;
 
-            NeuralNetwork net = NeuralNetwork.load("NN-784-16-10.json");
+            NeuralNetwork net = NeuralNetwork.load("src/main/resources/NN-784-64-32-10.json");
 
-            net.enableVisualMode();
-            images = MnistImageReader.readImages("/t10k-images.idx3-ubyte");
-            labels = MnistImageReader.readLabels("/t10k-labels.idx1-ubyte");
-            System.out.printf("Successful: %.2f %% \n", net.test(images, labels));
+            images = MnistImageReader.readImages("/data/mnist/t10k-images.idx3-ubyte");
+            labels = MnistImageReader.readLabels("/data/mnist/t10k-labels.idx1-ubyte");
 
-            showDigits(net.getResults());
+            showDigits(net.test(normalizeInput(images), labels), 10);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
